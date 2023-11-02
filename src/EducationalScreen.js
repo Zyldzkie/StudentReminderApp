@@ -1,36 +1,53 @@
 import React, { useState } from "react";
 import { Text, StyleSheet, View, SafeAreaView, TextInput, TouchableOpacity, FlatList, Image } from "react-native";
-import ImagePicker from 'react-native-image-picker';
+import * as ImagePicker from 'expo-image-picker';
+import * as DocumentPicker from 'expo-document-picker';
+
 
 export default function EducationalScreen() {
     const [messages, setMessages] = useState(''); // attach database here
 
     const [newMessage, setNewMessage] = useState('');
-    const [newImage, setNewImage] = useState(null);
+    const [newImage, setNewImage] = useState('');
+
 
     const handleSend = () => {
         if (newMessage.trim() !== '' || newImage !== null) {
             const newId = (messages.length + 1).toString();
             setMessages([...messages, { id: newId, sender: 'User', text: newMessage, image: newImage }]);
             setNewMessage('');
-            setNewImage(null);
+            setNewImage('');
         }
     };
 
-    const selectImage = () => {
+    const selectImage = async () => {
         const options = {
-            title: 'Select an Image',
-            storageOptions: {
-                skipBackup: true,
-                path: 'images',
-            },
+            mediaTypes: ImagePicker.MediaTypeOptions.All,
+            includeBase64: false,
+            // title: 'Select an Image',
+            // storageOptions: {
+            //     skipBackup: true,
+            //     path: 'images',
+            // },
+        
         };
-
-        ImagePicker.showImagePicker(options, (response) => {
+ 
+        let result = await ImagePicker.launchImageLibraryAsync(options, (response) => {
             if (response.uri) {
                 setNewImage(response.uri);
             }
         });
+
+        if (!result.canceled) {
+            setNewImage(result.assets[0].uri);
+        }        
+    };
+
+    const selectFile = async() => {
+        console.log("printed")
+        let result = await DocumentPicker.getDocumentAsync({});
+        console.log(result.uri);
+        console.log(result);
     };
 
     return (
@@ -55,6 +72,9 @@ export default function EducationalScreen() {
                 <TouchableOpacity style={styles.button} onPress={selectImage}>
                     <Text style={styles.buttonText}>Add Image</Text>
                 </TouchableOpacity>
+                <TouchableOpacity style={styles.button} onPress={selectFile}>
+                    <Text style={styles.buttonText}>Files</Text>
+                </TouchableOpacity>                
                 <TouchableOpacity style={styles.button} onPress={handleSend}>
                     <Text style={styles.buttonText}>Send</Text>
                 </TouchableOpacity>
@@ -81,7 +101,7 @@ const styles = StyleSheet.create({
     },
 
     textInput: {
-        width: '60%',
+        width: '40%',
         borderWidth: 1,
         borderColor: 'gray',
         borderRadius: 6,
